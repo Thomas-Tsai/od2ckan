@@ -139,7 +139,7 @@ class import2ckan():
 	    logger.info("add package and resources " + self.package['name'])
 	    self.add_package()
 	    self.add_resource()
-	return
+	return True
 
 if __name__ == '__main__': 
     jsonfile = 'testdata/data.txt'
