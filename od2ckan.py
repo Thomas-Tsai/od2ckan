@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import odtw
 import map2ckan
+import os
 from ckanapi import RemoteCKAN, NotAuthorized
 
 class import2ckan():
@@ -14,33 +15,32 @@ class import2ckan():
 	self.package_exist = 0
 
     def check_package(self):
-	pkgs = self.ckan.action.package_autocomplete(q=self.package['name']) 
+	pkgs = self.ckan.action.package_autocomplete(q=self.package['name'].lower())
 	for pkg in pkgs: 
-	    if self.package['name'] == pkg['name']:
-		print "package exist %s %s" % (pkg['name'], pkg['title'])
+	    if self.package['name'].lower() == pkg['name']:
 		return True
 	return False
 
     def check_resource(self, testresid):
-	package_resources = self.ckan.action.package_show(id=self.package['name'])
+	package_resources = self.ckan.action.package_show(id='a41000000g-000001')
 	for res in package_resources['resources']:
-	    print "test resname %s" % res['name']
 	    if res['name'] == testresid:
 		return True
 	return False
 
     def check_organization(self):
 	org = self.ckan.action.organization_list(organizations=[self.package['owner_org']])
-	if org == '':
+	if len(org) == 0:
 	    return False
-	return True
+	else:
+	    return True
 
     def check_tag(self):
 	return
 
     def add_package(self):
         self.ckan.action.package_create(
-	    name = self.package['name'],
+	    name = self.package['name'].lower(),
 	    title = self.package['title'],
 	    owner_org = self.package['owner_org'],
 	    notes = self.package['notes'],
@@ -56,28 +56,20 @@ class import2ckan():
 	return
 
     def add_resource(self):
+
 	for res in self.package['resources']:
-	    rfile = res['resourceid']+'.'+res['format']
-	    if self.check_resource(res['resourceid']) == True:
+	    rfile = self.package['basepath']+'/'+res['resourceid']+'.'+res['format'].lower()
+	    if self.check_resource(res['resourceid'].lower()) == True:
 		print "res exist %s" % res['resourceid']
 	    else:
-	        ckan.action.resource_create(
-	            package_id=self.package['name'],
-	            url=res['resourceid'],
+	        self.ckan.action.resource_create(
+	            package_id=self.package['name'].lower(),
+	            url=res['resourceid'].lower(),
 	            description=res['resourcedescription'],
-	            format=res['format'],
-	            name=res['resourceid'],
+	            format=res['format'].lower(),
+	            name=res['resourceid'].lower(),
 	            last_modified=res['resourcemodified'],
-		    upload=open(rfile, 'rb')
-	        #    revision_id=resourceID,
-	        #    hash='',
-	        #    resource_type='',
-	        #    mimetype='',
-	        #    mimetype_inner='',
-	        #    cache_url='',
-	        #    size='',
-	        #    created='',
-	        #    cache_last_updated='',
+		    upload=open(rfile, 'rb'),
 	        )
 	return
 
@@ -91,24 +83,30 @@ class import2ckan():
     def upload(self, data):
 	self.package = data
 	if self.check_organization() == False:
+	    print "add organization"
 	    self.add_organization()
+	else:
+	    print "org exist"
 	
 	if self.check_package() == True:
+	    print "update package later"
 	    #update later
 	    self.add_resource()
 	else:
+	    print "add package and resource"
 	    self.add_package()
 	    self.add_resource()
 	return
 
 if __name__ == '__main__': 
-    jsonfile = 'data.txt'
+    jsonfile = 'testdata/data.txt'
     odtw = odtw.od()
     data = odtw.read(jsonfile)
 
     ckmap = map2ckan.mapod2ckan()
     package = ckmap.map(data)
-    print package
+    od_data_path = os.path.dirname(os.path.realpath(jsonfile))
+    package['basepath'] = od_data_path
     put2ckan = import2ckan()
     res = put2ckan.upload(package)
 

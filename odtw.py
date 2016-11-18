@@ -49,7 +49,7 @@ class od():
 	return rs
 
 if __name__ == '__main__': 
-    jsonfile = 'data.txt'
+    jsonfile = 'testdata/data.txt'
     odtw=od()
     odtw.display(jsonfile)
     data = odtw.read(jsonfile)

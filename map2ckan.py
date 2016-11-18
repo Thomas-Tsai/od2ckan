@@ -46,11 +46,11 @@ class mapod2ckan():
 	    resource={'resourceid':'', 'resourcedescription':'', 'format':'', 'resourcemodified':'', 'extras':{}}
 	    for rk, rv in data.items():
 		if rk == 'resourceID':
-		    resource['resourceid'] = rv.lower()
+		    resource['resourceid'] = rv
 		elif rk == 'resourceDescription':
 		    resource['resourcedescription'] = rv
 		elif rk == 'format':
-		    resource['format'] = rv.lower()
+		    resource['format'] = rv
 		elif rk == 'resourceModified':
 		    resource['resourcemodified'] = rv
 		else:
@@ -61,10 +61,9 @@ class mapod2ckan():
 	rs = data
 	for k,v in rs.items():
 	    if k == 'title':
-		self.map_package_params('title', v.encode('utf-8'))
+		self.map_package_params('title', v)
 	    elif k == 'identifier':
-		v = v.lower()
-		self.map_package_params('name', v.encode('utf-8'))
+		self.map_package_params('name', v)
 	    elif k == 'description':
 		self.map_package_params('notes', v)
 	    elif k == 'type':
