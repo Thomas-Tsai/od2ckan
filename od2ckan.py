@@ -3,7 +3,15 @@
 import odtw
 import map2ckan
 import os
+import logging
 from ckanapi import RemoteCKAN, NotAuthorized
+
+LOGGING_FILE = 'ipgod-od2ckan.log'
+logging.basicConfig(filename=LOGGING_FILE,
+                    level=logging.INFO,
+                    format='%(asctime)s [%(levelname)s] %(filename)s_%(lineno)d  : %(message)s')
+logger = logging.getLogger('root') 
+
 
 class import2ckan():
     def __init__(self):
@@ -13,17 +21,23 @@ class import2ckan():
 	self.ckan = RemoteCKAN(url, apikey=ckan_key, user_agent=ua)
 	self.package = {}
 	self.package_exist = 0
+	self.resources = []
 
     def check_package(self):
 	pkgs = self.ckan.action.package_autocomplete(q=self.package['name'].lower())
 	for pkg in pkgs: 
 	    if self.package['name'].lower() == pkg['name']:
+		try:
+		    package_resources = self.ckan.action.package_show(id=pkg['name'])
+		    self.resources = package_resources['resources']
+		except:
+		    package_resources = self.ckan.action.package_show(id=pkg['name'])
+		    self.resources = package_resources['resources']
 		return True
 	return False
 
     def check_resource(self, testresid):
-	package_resources = self.ckan.action.package_show(id=self.package['name'].lower())
-	for res in package_resources['resources']:
+	for res in self.resources:
 	    if res['name'] == testresid:
 		return True
 	return False
@@ -60,7 +74,7 @@ class import2ckan():
 	for res in self.package['resources']:
 	    rfile = self.package['basepath']+'/'+res['resourceid']+'.'+res['format'].lower()
 	    if self.check_resource(res['resourceid'].lower()) == True:
-		print "res exist %s" % res['resourceid']
+		logger.info("resource %s exist" % res['resourceid'])
 	    else:
 	        self.ckan.action.resource_create(
 	            package_id=self.package['name'].lower(),
@@ -71,6 +85,7 @@ class import2ckan():
 	            last_modified=res['resourcemodified'],
 		    upload=open(rfile, 'rb'),
 	        )
+		logger.info("resource added %s" % res['resourceid'])
 	return
 
     def add_organization(self):
@@ -94,7 +109,8 @@ class import2ckan():
 	return
 
     def update_package(self):
-        self.ckan.action.package_update(
+        self.ckan.action.package_patch(
+	    id = self.package['name'].lower(),
 	    name = self.package['name'].lower(),
 	    title = self.package['title'],
 	    owner_org = self.package['owner_org'],
@@ -113,18 +129,18 @@ class import2ckan():
     def commit(self, data):
 	self.package = data
 	if self.check_organization() == False:
-	    print "add organization"
+	    logger.info("add organization " + self.package['org']['name'])
 	    self.add_organization()
 	else:
-	    print "update organization"
+	    logger.info("update organization " + self.package['org']['name'])
 	    self.update_organization()
 	
 	if self.check_package() == True:
-	    print "update package"
+	    logger.info("update package and add resources " + self.package['name'])
 	    self.update_package()
 	    self.add_resource()
 	else:
-	    print "add package and resource"
+	    logger.info("add package and resources " + self.package['name'])
 	    self.add_package()
 	    self.add_resource()
 	return
