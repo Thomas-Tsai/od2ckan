@@ -4,7 +4,7 @@ import organization_map
 
 class mapod2ckan():
     def __init__(self):
-	self.package={'extras':[], 'tag':[], 'resources':[]}
+	self.package={'extras':[], 'tag':[], 'resources':[], 'org':{'extras':[]}}
 	self.license_id='1'
 	self.license_url='http'
 
@@ -27,7 +27,14 @@ class mapod2ckan():
 	    org = organization_map.organization_name()
 	    owner_org = org.search(value.encode('utf8'))
 	    self.package['owner_org'] = owner_org
-#check organization and update or add organization
+	    self.package['org']['name'] = owner_org
+	    self.package['org']['title'] = value.encode('utf-8')
+	else:
+	    org_extra={}
+	    org_extra['key'] = key.encode('utf-8')
+	    org_extra['value'] = value.encode('utf-8')
+	    self.package['org']['extras'].append(org_extra)
+	
 
     def map_package_extras(self, key, value):
         if key == 'notes':

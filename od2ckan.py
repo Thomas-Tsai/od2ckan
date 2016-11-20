@@ -22,7 +22,7 @@ class import2ckan():
 	return False
 
     def check_resource(self, testresid):
-	package_resources = self.ckan.action.package_show(id='a41000000g-000001')
+	package_resources = self.ckan.action.package_show(id=self.package['name'].lower())
 	for res in package_resources['resources']:
 	    if res['name'] == testresid:
 		return True
@@ -74,27 +74,58 @@ class import2ckan():
 	return
 
     def add_organization(self):
-	self.ckan.action.organization_create(name=self.package['owner_org'])
+	self.ckan.action.organization_create(
+		name=self.package['owner_org'],
+		title=self.package['org']['title'],
+		extras=self.package['org']['extras']
+		)
 	return
 
     def add_tag(self):
 	return
 
-    def upload(self, data):
+    def update_organization(self):
+	self.ckan.action.organization_update(
+		id=self.package['owner_org'],
+		name=self.package['owner_org'],
+		title=self.package['org']['title'],
+		extras=self.package['org']['extras']
+		)
+	return
+
+    def update_package(self):
+        self.ckan.action.package_update(
+	    name = self.package['name'].lower(),
+	    title = self.package['title'],
+	    owner_org = self.package['owner_org'],
+	    notes = self.package['notes'],
+	    type = self.package['type'],
+	    last_modified = self.package['last_modified'],
+	    #license_id = self.package['license_id'],
+	    author = self.package['author'],
+	    author_email = self.package['author_email'],
+	    tags = self.package['tag'],
+	    extras = self.package['extras']
+        )
+
+	return
+
+    def commit(self, data):
 	self.package = data
 	if self.check_organization() == False:
 	    print "add organization"
 	    self.add_organization()
 	else:
-	    print "org exist"
+	    print "update organization"
+	    self.update_organization()
 	
 	if self.check_package() == True:
-	    print "update package later"
+	    print "update package"
 	    #update later
 	    self.add_resource()
 	else:
 	    print "add package and resource"
-	    self.add_package()
+	    self.update_package()
 	    self.add_resource()
 	return
 
@@ -108,5 +139,5 @@ if __name__ == '__main__':
     od_data_path = os.path.dirname(os.path.realpath(jsonfile))
     package['basepath'] = od_data_path
     put2ckan = import2ckan()
-    res = put2ckan.upload(package)
+    res = put2ckan.commit(package)
 
