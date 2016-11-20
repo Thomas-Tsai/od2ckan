@@ -121,11 +121,11 @@ class import2ckan():
 	
 	if self.check_package() == True:
 	    print "update package"
-	    #update later
+	    self.update_package()
 	    self.add_resource()
 	else:
 	    print "add package and resource"
-	    self.update_package()
+	    self.add_package()
 	    self.add_resource()
 	return
 
