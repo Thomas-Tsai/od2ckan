@@ -27,12 +27,8 @@ class import2ckan():
 	pkgs = self.ckan.action.package_autocomplete(q=self.package['name'].lower())
 	for pkg in pkgs: 
 	    if self.package['name'].lower() == pkg['name']:
-		try:
-		    package_resources = self.ckan.action.package_show(id=pkg['name'])
-		    self.resources = package_resources['resources']
-		except:
-		    package_resources = self.ckan.action.package_show(id=pkg['name'])
-		    self.resources = package_resources['resources']
+		package_resources = self.ckan.action.package_show(id=pkg['name'])
+		self.resources = package_resources['resources']
 		return True
 	return False
 

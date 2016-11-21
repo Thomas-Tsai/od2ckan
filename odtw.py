@@ -2,6 +2,15 @@
 # -*- coding: utf-8 -*-
 import json
 import io
+import logging
+import os.path
+
+LOGGING_FILE = 'ipgod-od2ckan.log'
+logging.basicConfig(filename=LOGGING_FILE,
+                    level=logging.INFO,
+                    format='%(asctime)s [%(levelname)s] %(filename)s_%(lineno)d  : %(message)s')
+logger = logging.getLogger('root') 
+
 
 class od():
     def __init__(self):
@@ -25,9 +34,14 @@ class od():
 	return self.data
 
     def loadfile(self, odfile):
-	with io.open(odfile, 'r', encoding='utf-8') as datafd:
-	    data = datafd.read()
+        logger.info("load odtw json file %s" % odfile)
+        if os.path.isfile(odfile) == True:
+	    with io.open(odfile, 'r', encoding='utf-8') as datafd:
+	        data = datafd.read()
+        else:
+            logger.warn("json file NOT exist %s" % odfile)
 	x=json.loads(data)
+        logger.info("load json file successful")
 	rs = self.restruct(x['result'])
 	return rs
 
@@ -46,6 +60,7 @@ class od():
 
     def read(self, odfile):
 	rs = self.loadfile(odfile)
+        logger.info("read od json file done")
 	return rs
 
 if __name__ == '__main__': 
